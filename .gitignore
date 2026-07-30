@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Sorties de conversion produites en local
+*.html
+!app/templates/*.html
+
+.env
+.DS_Store
+.idea/
+.vscode/

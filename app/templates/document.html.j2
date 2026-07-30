@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ doc_title }}</title>
+<style>
+:root{
+  --blue:#1CA9DB;
+  --blue-dark:#0E7FA8;
+  --navy:#152742;
+  --navy2:#1E3A5F;
+  --gold:#C69B4A;
+  --bg:#eef2f6;
+  --card:#FFFFFF;
+  --text:#233142;
+  --muted:#5C6B7A;
+  --border:#E1E8ED;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Segoe UI",Arial,Helvetica,sans-serif;
+  line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+
+/* ------------------------------------------------------------------ barre */
+.toolbar{
+  position:fixed;
+  top:16px;
+  right:16px;
+  z-index:60;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px;
+  background:rgba(21,39,66,.94);
+  border-radius:10px;
+  box-shadow:0 4px 16px rgba(0,0,0,.22);
+}
+.tb-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:34px;
+  height:34px;
+  padding:0;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:#fff;
+  font-size:17px;
+  line-height:1;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.tb-btn:hover{background:rgba(255,255,255,.15);}
+.tb-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.tb-sep{width:1px;height:22px;background:rgba(255,255,255,.22);}
+.tb-zoom{
+  min-width:52px;
+  padding:0 6px;
+  border:0;
+  background:transparent;
+  color:var(--gold);
+  font-family:inherit;
+  font-size:12.5px;
+  font-weight:600;
+  cursor:pointer;
+}
+.tb-zoom:hover{color:#fff;}
+/* Le bouton de sommaire et son séparateur n'existent qu'en dessous de 900px,
+   la colonne latérale étant toujours visible sur grand écran. */
+#menu-btn,#menu-sep{display:none;}
+
+/* ---------------------------------------------------------------- layout */
+.app-layout{display:flex;align-items:flex-start;}
+
+.sidebar{
+  flex:0 0 280px;
+  width:280px;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+  background:var(--navy);
+  padding:26px 0 34px;
+  z-index:50;
+}
+.sidebar-title{
+  margin:0 22px 16px;
+  color:var(--gold);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.toc{
+  counter-reset:toc;
+  list-style:none;
+  margin:0;
+  padding:0;
+}
+.toc li{counter-increment:toc;}
+.toc a{
+  display:flex;
+  gap:9px;
+  padding:8px 22px;
+  border-left:3px solid transparent;
+  color:#c9d6e4;
+  font-size:13.5px;
+  text-decoration:none;
+  transition:background .15s ease,color .15s ease,border-color .15s ease;
+}
+.toc a::before{
+  content:counter(toc) ".";
+  flex:0 0 auto;
+  min-width:20px;
+  color:var(--gold);
+  font-size:12px;
+  font-weight:600;
+  opacity:.75;
+}
+.toc a:hover{background:rgba(255,255,255,.07);color:#fff;}
+.toc a.active{
+  background:rgba(28,169,219,.16);
+  border-left-color:var(--blue);
+  color:#fff;
+  font-weight:600;
+}
+.toc a.active::before{opacity:1;}
+
+.main-scroll{flex:1 1 auto;min-width:0;}
+.zoom-target{
+  width:100%;
+  transform-origin:top left;
+  will-change:transform;
+}
+
+/* ---------------------------------------------------------------- entête */
+.doc-header{
+  padding:52px 44px 46px;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 55%,var(--blue-dark) 100%);
+  color:#fff;
+}
+.doc-badge{
+  display:inline-block;
+  margin-bottom:16px;
+  padding:5px 13px;
+  border:1px solid rgba(198,155,74,.55);
+  border-radius:999px;
+  color:var(--gold);
+  font-size:11.5px;
+  font-weight:700;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.doc-title{
+  margin:0 0 10px;
+  font-size:33px;
+  font-weight:700;
+  line-height:1.22;
+}
+.doc-subtitle{
+  margin:0;
+  max-width:70ch;
+  color:rgba(255,255,255,.86);
+  font-size:16px;
+}
+.doc-author{
+  margin:20px 0 0;
+  padding-top:16px;
+  border-top:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.7);
+  font-size:13.5px;
+}
+
+/* ----------------------------------------------------------------- pages */
+.doc-body{padding:34px 44px 56px;}
+.page-block{
+  margin:0 0 30px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:11px;
+  overflow:hidden;
+  box-shadow:0 1px 3px rgba(21,39,66,.07);
+  scroll-margin-top:22px;
+}
+.page-label{
+  padding:14px 20px;
+  border-bottom:1px solid var(--border);
+  background:#f7fafc;
+  color:var(--navy);
+  font-size:15px;
+  font-weight:600;
+}
+.page-img{
+  display:block;
+  width:100%;
+  height:auto;
+  background:#fff;
+}
+
+/* ------------------------------------------------------------------- pied */
+.doc-footer{
+  padding:26px 44px 34px;
+  background:var(--navy);
+  color:rgba(255,255,255,.62);
+  font-size:13px;
+}
+.doc-footer strong{display:block;color:#fff;font-size:14.5px;font-weight:600;}
+.doc-footer .doc-footer-badge{
+  color:var(--gold);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  z-index:45;
+  background:rgba(10,20,35,.5);
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .22s ease,visibility .22s ease;
+}
+.overlay.open{opacity:1;visibility:visible;}
+
+/* ---------------------------------------------------------------- mobile */
+@media (max-width:900px){
+  #menu-btn{display:flex;}
+  #menu-sep{display:block;}
+  .sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    height:100vh;
+    transform:translateX(-100%);
+    transition:transform .26s ease;
+    box-shadow:4px 0 22px rgba(0,0,0,.3);
+  }
+  .sidebar.open{transform:translateX(0);}
+  .doc-header{padding:70px 22px 32px;}
+  .doc-title{font-size:25px;}
+  .doc-body{padding:22px 16px 40px;}
+  .doc-footer{padding:22px 22px 28px;}
+}
+
+@media print{
+  .toolbar,.sidebar,.overlay{display:none !important;}
+  .page-block{break-inside:avoid;box-shadow:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button class="tb-btn" id="menu-btn" type="button" aria-label="Ouvrir le sommaire">&#9776;</button>
+  <span class="tb-sep" id="menu-sep"></span>
+  <button class="tb-btn" id="zoom-out" type="button" aria-label="Réduire">&minus;</button>
+  <button class="tb-zoom" id="zoom-level" type="button" aria-label="Réinitialiser l'affichage">100%</button>
+  <button class="tb-btn" id="zoom-in" type="button" aria-label="Agrandir">&plus;</button>
+  <span class="tb-sep"></span>
+  <button class="tb-btn" id="fs-btn" type="button" aria-label="Plein écran">&#9974;</button>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="app-layout">
+
+  <nav class="sidebar" id="sidebar" aria-label="Sommaire">
+    <h2 class="sidebar-title">Sommaire</h2>
+    <ol class="toc" id="toc">
+      {%- for page in pages %}
+      <li><a href="#page-{{ loop.index }}">{{ page.toc_label }}</a></li>
+      {%- endfor %}
+    </ol>
+  </nav>
+
+  <div class="main-scroll">
+    <div class="zoom-target" id="zoom-target">
+
+      <header class="doc-header">
+        {%- if badge %}
+        <span class="doc-badge">{{ badge }}</span>
+        {%- endif %}
+        <h1 class="doc-title">{{ doc_title }}</h1>
+        {%- if subtitle %}
+        <p class="doc-subtitle">{{ subtitle }}</p>
+        {%- endif %}
+        {%- if author %}
+        <p class="doc-author">{{ author }}</p>
+        {%- endif %}
+      </header>
+
+      <main class="doc-body">
+        {%- for page in pages %}
+        <section class="page-block" id="page-{{ loop.index }}">
+          <div class="page-label">{{ page.title }}</div>
+          <img class="page-img" loading="lazy" alt="{{ page.title }}"
+               src="data:image/jpeg;base64,{{ page.image_b64 }}">
+        </section>
+        {%- endfor %}
+      </main>
+
+      <footer class="doc-footer">
+        {%- if badge %}
+        <span class="doc-footer-badge">{{ badge }}</span>
+        {%- endif %}
+        <strong>{{ doc_title }}</strong>
+      </footer>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------ plein écran */
+  var fsBtn = document.getElementById("fs-btn");
+  var ICON_ENTER = "⛶";   /* flèches vers l'extérieur */
+  var ICON_EXIT  = "✕";   /* croix */
+
+  function fullscreenElement() {
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+
+  fsBtn.addEventListener("click", function () {
+    if (fullscreenElement()) {
+      if (document.exitFullscreen) { document.exitFullscreen(); }
+      else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+    } else {
+      var el = document.documentElement;
+      if (el.requestFullscreen) { el.requestFullscreen(); }
+      else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); }
+    }
+  });
+
+  function syncFsIcon() {
+    var on = !!fullscreenElement();
+    fsBtn.innerHTML = on ? ICON_EXIT : ICON_ENTER;
+    fsBtn.setAttribute("aria-label", on ? "Quitter le plein écran" : "Plein écran");
+  }
+  document.addEventListener("fullscreenchange", syncFsIcon);
+  document.addEventListener("webkitfullscreenchange", syncFsIcon);
+  syncFsIcon();
+
+  /* ------------------------------------------------------------------ zoom */
+  var ZOOM_MIN = 0.6, ZOOM_MAX = 1.6, ZOOM_STEP = 0.1;
+  var zoom = 1;
+  var target = document.getElementById("zoom-target");
+  var readout = document.getElementById("zoom-level");
+
+  function applyZoom() {
+    /* La mise à l'échelle réduit la largeur visuelle : on compense la largeur
+       du conteneur pour qu'il occupe toujours toute la colonne, sans jamais
+       déborder horizontalement. */
+    target.style.transform = "scale(" + zoom + ")";
+    target.style.width = (100 / zoom) + "%";
+    readout.textContent = Math.round(zoom * 100) + "%";
+  }
+  function setZoom(value) {
+    zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value * 10) / 10));
+    applyZoom();
+  }
+
+  document.getElementById("zoom-in").addEventListener("click", function () {
+    setZoom(zoom + ZOOM_STEP);
+  });
+  document.getElementById("zoom-out").addEventListener("click", function () {
+    setZoom(zoom - ZOOM_STEP);
+  });
+  readout.addEventListener("click", function () { setZoom(1); });
+  applyZoom();
+
+  /* -------------------------------------------------------- sommaire mobile */
+  var sidebar = document.getElementById("sidebar");
+  var overlay = document.getElementById("overlay");
+
+  function closeMenu() {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("open");
+  }
+  document.getElementById("menu-btn").addEventListener("click", function () {
+    sidebar.classList.toggle("open");
+    overlay.classList.toggle("open");
+  });
+  overlay.addEventListener("click", closeMenu);
+
+  /* --------------------------------------------------------------- suivi */
+  var links = Array.prototype.slice.call(
+    document.querySelectorAll("#toc a")
+  );
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute("href").slice(1)] = a; });
+
+  /* Sur mobile, refermer le sommaire après navigation. */
+  links.forEach(function (a) {
+    a.addEventListener("click", function () {
+      if (window.matchMedia("(max-width:900px)").matches) { closeMenu(); }
+    });
+  });
+
+  function markActive(a) {
+    links.forEach(function (other) { other.classList.remove("active"); });
+    a.classList.add("active");
+    /* Garder le lien courant visible dans la colonne. */
+    if (a.scrollIntoView) { a.scrollIntoView({ block: "nearest" }); }
+  }
+
+  if ("IntersectionObserver" in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var link = byId[entry.target.id];
+          if (link) { markActive(link); }
+        }
+      });
+    }, { rootMargin: "-10% 0px -75% 0px", threshold: 0 });
+
+    document.querySelectorAll(".page-block").forEach(function (section) {
+      observer.observe(section);
+    });
+  }
+  if (links.length) { links[0].classList.add("active"); }
+})();
+</script>
+</body>
+</html>

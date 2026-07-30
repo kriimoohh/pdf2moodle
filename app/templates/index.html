@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pdf2moodle — PDF vers page HTML autonome</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📄</text></svg>">
+</head>
+<body>
+
+<header class="masthead">
+  <span class="masthead-badge">Outil de conversion</span>
+  <h1>pdf2moodle</h1>
+  <p>Transformez un PDF de cours en une page HTML autonome, prête à déposer
+     comme ressource « Fichier » sur Moodle.</p>
+</header>
+
+<main class="wrap">
+
+  <form id="form" class="card" novalidate>
+
+    <div class="drop" id="drop" tabindex="0" role="button"
+         aria-label="Choisir un fichier PDF">
+      <input type="file" id="file" name="file" accept="application/pdf,.pdf" hidden>
+      <div class="drop-icon" aria-hidden="true">⬆</div>
+      <p class="drop-main">Glissez votre PDF ici <span>ou cliquez pour parcourir</span></p>
+      <p class="drop-hint">{{ max_mb }} Mo maximum &middot; {{ max_pages }} pages maximum</p>
+      <p class="drop-file" id="drop-file" hidden></p>
+    </div>
+
+    <div class="grid">
+      <label class="field">
+        <span>Badge</span>
+        <input type="text" name="badge" maxlength="80" placeholder="Licence 2 — Semestre 3">
+      </label>
+      <label class="field">
+        <span>Titre</span>
+        <input type="text" name="title" maxlength="300" placeholder="Repris du nom du fichier si vide">
+      </label>
+      <label class="field field-wide">
+        <span>Sous-titre</span>
+        <input type="text" name="subtitle" maxlength="300" placeholder="Introduction aux systèmes distribués">
+      </label>
+      <label class="field field-wide">
+        <span>Auteur</span>
+        <input type="text" name="author" maxlength="160" placeholder="Prénom Nom — Établissement">
+      </label>
+    </div>
+
+    <fieldset class="quality">
+      <legend>Qualité des images</legend>
+      <div class="quality-options">
+        <label><input type="radio" name="quality" value="low"><span>Basse<small>fichier léger</small></span></label>
+        <label><input type="radio" name="quality" value="medium" checked><span>Moyenne<small>recommandé</small></span></label>
+        <label><input type="radio" name="quality" value="high"><span>Haute<small>texte fin, plus lourd</small></span></label>
+      </div>
+    </fieldset>
+
+    <button type="submit" class="submit" id="submit" disabled>Convertir</button>
+
+    <div class="progress" id="progress" hidden>
+      <div class="progress-bar"><span id="progress-fill"></span></div>
+      <p class="progress-text" id="progress-text">Envoi en cours…</p>
+    </div>
+
+    <p class="alert" id="alert" hidden role="alert"></p>
+  </form>
+
+  <section class="card result" id="result" hidden>
+    <div class="result-head">
+      <div>
+        <h2>Conversion terminée</h2>
+        <p id="result-meta"></p>
+      </div>
+      <div class="result-actions">
+        <a class="btn-primary" id="download" download>Télécharger le HTML</a>
+        <button type="button" class="btn-ghost" id="restart">Nouveau fichier</button>
+      </div>
+    </div>
+    <iframe id="preview" title="Aperçu du document généré"></iframe>
+  </section>
+
+</main>
+
+<footer class="colophon">
+  Aucun fichier n'est conservé sur le serveur : la conversion se fait en mémoire
+  et le résultat vous est renvoyé directement.
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

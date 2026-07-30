@@ -1,0 +1,18 @@
+# Dépendances de développement et de test.
+-r requirements.txt
+
+pytest==9.1.1
+httpx==0.28.1
+httpcore==1.0.9
+certifi==2026.7.22
+iniconfig==2.3.0
+packaging==26.2
+pluggy==1.6.0
+Pygments==2.20.0
+
+# Tests navigateur (tests/test_browser.py). Après installation, récupérer le
+# navigateur :  playwright install chromium
+# Ces tests sont ignorés automatiquement si Playwright est absent.
+playwright==1.61.0
+greenlet==3.5.4
+pyee==13.0.1

@@ -1,0 +1,214 @@
+/* Styles de la page d'upload (indépendants du document généré). */
+
+:root{
+  --blue:#1CA9DB;
+  --blue-dark:#0E7FA8;
+  --navy:#152742;
+  --navy2:#1E3A5F;
+  --gold:#C69B4A;
+  --bg:#eef2f6;
+  --card:#FFFFFF;
+  --text:#233142;
+  --muted:#5C6B7A;
+  --border:#E1E8ED;
+  --danger:#B3261E;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Segoe UI",Arial,Helvetica,sans-serif;
+  line-height:1.55;
+}
+
+.masthead{
+  padding:44px 24px 68px;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 55%,var(--blue-dark) 100%);
+  color:#fff;
+  text-align:center;
+}
+.masthead-badge{
+  display:inline-block;
+  margin-bottom:14px;
+  padding:5px 13px;
+  border:1px solid rgba(198,155,74,.55);
+  border-radius:999px;
+  color:var(--gold);
+  font-size:11.5px;
+  font-weight:700;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.masthead h1{margin:0 0 10px;font-size:36px;font-weight:700;letter-spacing:-.01em;}
+.masthead p{margin:0 auto;max-width:58ch;color:rgba(255,255,255,.84);font-size:15.5px;}
+
+.wrap{max-width:880px;margin:-40px auto 0;padding:0 20px 56px;}
+
+.card{
+  margin-bottom:24px;
+  padding:26px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow:0 6px 24px rgba(21,39,66,.09);
+}
+
+/* ------------------------------------------------------------ dépôt fichier */
+.drop{
+  padding:34px 20px;
+  border:2px dashed #c6d3de;
+  border-radius:12px;
+  background:#f8fafc;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .18s ease,background .18s ease;
+}
+.drop:hover,.drop:focus-visible{border-color:var(--blue);background:#f2f9fd;outline:none;}
+.drop.dragover{border-color:var(--blue);background:#e8f5fc;}
+.drop.has-file{border-style:solid;border-color:var(--blue);background:#f2f9fd;}
+.drop-icon{margin-bottom:8px;color:var(--blue);font-size:26px;line-height:1;}
+.drop-main{margin:0 0 4px;font-size:16px;font-weight:600;}
+.drop-main span{font-weight:400;color:var(--muted);}
+.drop-hint{margin:0;color:var(--muted);font-size:13px;}
+.drop-file{
+  margin:12px 0 0;
+  color:var(--navy);
+  font-size:14px;
+  font-weight:600;
+  overflow-wrap:anywhere;
+}
+
+/* -------------------------------------------------------------- formulaire */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field-wide{grid-column:1 / -1;}
+.field span{color:var(--muted);font-size:12.5px;font-weight:600;letter-spacing:.02em;}
+.field input{
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+  color:var(--text);
+  font-family:inherit;
+  font-size:14.5px;
+}
+.field input:focus{outline:2px solid var(--blue);outline-offset:-1px;border-color:var(--blue);}
+
+.quality{margin:22px 0 0;padding:0;border:0;}
+.quality legend{
+  padding:0 0 10px;
+  color:var(--muted);
+  font-size:12.5px;
+  font-weight:600;
+}
+.quality-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.quality-options label{cursor:pointer;}
+.quality-options input{position:absolute;opacity:0;pointer-events:none;}
+.quality-options span{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  font-size:14.5px;
+  font-weight:600;
+  text-align:center;
+  transition:border-color .15s ease,background .15s ease;
+}
+.quality-options small{color:var(--muted);font-size:11.5px;font-weight:400;}
+.quality-options input:checked + span{border-color:var(--blue);background:#eef8fd;color:var(--blue-dark);}
+.quality-options input:focus-visible + span{outline:2px solid var(--blue);outline-offset:2px;}
+
+.submit{
+  width:100%;
+  margin-top:24px;
+  padding:13px;
+  border:0;
+  border-radius:9px;
+  background:var(--blue-dark);
+  color:#fff;
+  font-family:inherit;
+  font-size:15.5px;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.submit:hover:not(:disabled){background:var(--navy2);}
+.submit:disabled{background:#b6c4d1;cursor:not-allowed;}
+
+/* --------------------------------------------------------------- retours */
+.progress{margin-top:18px;}
+.progress-bar{height:7px;border-radius:99px;background:#e3ebf2;overflow:hidden;}
+.progress-bar span{
+  display:block;
+  width:0;
+  height:100%;
+  border-radius:99px;
+  background:linear-gradient(90deg,var(--blue),var(--blue-dark));
+  transition:width .2s ease;
+}
+.progress-text{margin:8px 0 0;color:var(--muted);font-size:13px;text-align:center;}
+
+.alert{
+  margin:18px 0 0;
+  padding:11px 14px;
+  border:1px solid #f0c8c4;
+  border-radius:9px;
+  background:#fdf1f0;
+  color:var(--danger);
+  font-size:14px;
+}
+
+/* --------------------------------------------------------------- résultat */
+.result-head{
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+  align-items:flex-start;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+.result-head h2{margin:0 0 3px;font-size:19px;}
+.result-head p{margin:0;color:var(--muted);font-size:13.5px;}
+.result-actions{display:flex;gap:9px;}
+.btn-primary,.btn-ghost{
+  padding:10px 17px;
+  border-radius:8px;
+  font-family:inherit;
+  font-size:14.5px;
+  font-weight:600;
+  text-decoration:none;
+  cursor:pointer;
+}
+.btn-primary{border:0;background:var(--gold);color:var(--navy);}
+.btn-primary:hover{background:#b98c3e;}
+.btn-ghost{border:1px solid var(--border);background:#fff;color:var(--muted);}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue-dark);}
+
+#preview{
+  width:100%;
+  height:min(620px,72vh);
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#fff;
+}
+
+.colophon{
+  max-width:880px;
+  margin:0 auto;
+  padding:0 20px 44px;
+  color:var(--muted);
+  font-size:13px;
+  text-align:center;
+}
+
+@media (max-width:640px){
+  .masthead h1{font-size:28px;}
+  .wrap{padding:0 14px 40px;}
+  .card{padding:18px;}
+  .grid,.quality-options{grid-template-columns:1fr;}
+  .result-actions{width:100%;}
+  .result-actions>*{flex:1;text-align:center;}
+}
