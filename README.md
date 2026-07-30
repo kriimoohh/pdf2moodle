@@ -115,12 +115,12 @@ Sonde de disponibilité, volontairement accessible sans authentification.
    Notez la commande `source .../bin/activate` affichée par cPanel : elle
    contient le chemin de l'environnement virtuel créé pour vous.
 
-3. **Code et dépendances.** Déposez le dépôt dans `apps/pdf2moodle`
+3. **Code et dépendances.** Déposez le dépôt dans `~/pdf2moodle`
    (Git ou envoi de fichiers), puis en SSH :
 
    ```bash
-   source ~/virtualenv/apps/pdf2moodle/3.12/bin/activate
-   cd ~/apps/pdf2moodle
+   source ~/virtualenv/pdf2moodle/3.12/bin/activate
+   cd ~/pdf2moodle
    pip install -r requirements.txt
    ```
 
@@ -128,23 +128,70 @@ Sonde de disponibilité, volontairement accessible sans authentification.
    `poppler-utils`, ni autre binaire système n'est requis.
 
 4. **Variables d'environnement.** Toujours dans *Setup Python App*, section
-   *Environment variables*, ajoutez au minimum :
+   *Environment variables* :
 
    ```
-   TOOL_PASSWORD = <un mot de passe solide>
    TOOL_USERNAME = <votre identifiant>
+   TOOL_PASSWORD = <un mot de passe solide>
    ```
 
-5. **Limite d'envoi côté serveur web.** Créez un `.htaccess` à la racine du
-   sous-domaine — la limite applicative de FastAPI ne dispense pas de celle du
-   serveur, qui rejette la requête plus tôt et sans consommer de mémoire :
+   En ligne de commande, l'équivalent est :
 
-   ```apache
-   # 50 Mo, aligné sur MAX_UPLOAD_MB
-   LimitRequestBody 52428800
+   ```bash
+   cloudlinux-selector set --interpreter python --app-root pdf2moodle \
+     --env-vars '{"TOOL_USERNAME":"…","TOOL_PASSWORD":"…"}'
+   cloudlinux-selector restart --interpreter python --app-root pdf2moodle
    ```
 
-6. **Redémarrage.** Bouton *Restart* de *Setup Python App*, puis vérifiez :
+5. **Protection du `.htaccess`.** Étape **obligatoire**, pas seulement pour la
+   limite d'envoi :
+
+   ```bash
+   cat deploy/o2switch.htaccess >> ~/pdf2moodle/.htaccess
+   ```
+
+   Passenger impose que la racine du site soit la racine du code. Sans ces
+   règles, le serveur web sert les fichiers du dépôt en statique, **sans passer
+   par l'authentification de l'application** : `app/config.py`, `wsgi_entry.py`,
+   `requirements.txt` et les PDF de `tests/` deviennent lisibles par n'importe
+   qui. Le fichier ajoute aussi `LimitRequestBody`, la limite applicative de
+   FastAPI ne dispensant pas de celle du serveur.
+
+   Ajoutez-le **à la suite** du `.htaccess` existant : cPanel y maintient ses
+   propres blocs `CLOUDLINUX …` qu'il réécrit à chaque modification de l'app.
+
+   Vérifiez ensuite :
+
+   ```bash
+   curl -o /dev/null -w '%{http_code}\n' https://<domaine>/app/config.py   # 404
+   curl -o /dev/null -w '%{http_code}\n' https://<domaine>/healthz         # 200
+   ```
+
+6. **ModSecurity.** Sur O2Switch, ModSecurity **bloque tout envoi de fichier**
+   — quels que soient le contenu, l'extension et la taille. Le symptôme est
+   trompeur : la requête est rejetée en `406`, le serveur fait une redirection
+   interne vers `/406.shtml`, celle-ci est routée vers l'application qui répond
+   légitimement `404`. On croit donc à une route manquante alors que la requête
+   n'a jamais atteint le point de conversion.
+
+   L'outil ne peut pas fonctionner sans envoi de fichier. Deux issues :
+
+   ```bash
+   # a) désactiver ModSecurity sur ce seul sous-domaine
+   uapi ModSecurity disable_domains domains=<sous-domaine>
+   # pour revenir en arrière : uapi ModSecurity enable_domains domains=<sous-domaine>
+
+   # b) demander au support de ne lever que la règle en cause
+   #    (le log d'audit n'est pas lisible côté utilisateur, l'ID est introuvable seul)
+   ```
+
+   Vérifiez le périmètre après coup — la commande ne doit toucher qu'un domaine :
+
+   ```bash
+   uapi --output=json ModSecurity list_domains
+   ```
+
+7. **Redémarrage.** Bouton *Restart* de *Setup Python App*, puis vérifiez :
 
    ```bash
    curl https://pdf2moodle.sakai.sn/healthz
@@ -199,11 +246,20 @@ pdf2moodle/
 │   ├── make_fixtures.py          génération des PDF d'exemple
 │   ├── test_acceptance.py        critères d'acceptation
 │   ├── test_browser.py           comportement réel dans Chromium
+│   ├── test_wsgi_entry.py        point d'entrée Passenger (chemin a2wsgi)
 │   └── test_auth.py              protection par mot de passe
+├── deploy/
+│   └── o2switch.htaccess         règles à ajouter au .htaccess (obligatoire)
 ├── wsgi_entry.py                 point d'entrée Passenger (O2Switch)
 ├── Dockerfile / railway.json / Procfile
 └── requirements.txt
 ```
+
+> Sur O2Switch, les fichiers de `app/static/` sont servis **par l'application**
+> et non par le serveur web (Passenger prend la racine du site). Chaque
+> affichage de la page d'envoi fait donc trois requêtes à l'application. C'est
+> sans conséquence à l'usage, mais un test automatisé qui martèle le site
+> déclenchera le limiteur de débit d'O2Switch (`429`).
 
 ---
 
@@ -270,3 +326,20 @@ Les champs du formulaire sont échappés à l'insertion dans le document, et le
 nom du fichier de sortie est translittéré en ASCII puis filtré — ce qui écarte
 aussi bien la traversée de répertoire que l'injection dans l'en-tête
 `Content-Disposition`.
+
+## Authentification
+
+Définir `TOOL_PASSWORD` place **toutes** les routes derrière une authentification
+HTTP Basic, sauf `/healthz` qui reste joignable pour la supervision. La
+comparaison des identifiants passe par `secrets.compare_digest` des deux côtés,
+sans court-circuit sur le nom d'utilisateur.
+
+Deux limites à connaître :
+
+- HTTP Basic transmet les identifiants à chaque requête. **N'activez cette
+  protection que derrière HTTPS**, ce qui est le cas par défaut sur O2Switch
+  comme sur Railway.
+- L'authentification est appliquée par l'application. Les fichiers servis
+  directement par le serveur web **ne passent pas par elle** — d'où le
+  `deploy/o2switch.htaccess`, sans lequel tout le dépôt reste lisible malgré un
+  mot de passe correctement configuré.

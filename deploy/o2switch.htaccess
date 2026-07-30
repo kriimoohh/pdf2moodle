@@ -1,0 +1,42 @@
+# Règles à ajouter au .htaccess de l'application sur O2Switch (cPanel/Passenger).
+#
+# NE PAS remplacer le .htaccess existant : cPanel y écrit ses propres blocs
+# « CLOUDLINUX PASSENGER CONFIGURATION » et « CLOUDLINUX ENV VARS », qu'il
+# réécrit à chaque modification de l'application. Ajoutez ce contenu À LA SUITE,
+# après les blocs marqués « DO NOT REMOVE » :
+#
+#     cat deploy/o2switch.htaccess >> ~/pdf2moodle/.htaccess
+#
+# Puis vérifiez : les sources doivent répondre 404, l'application 200.
+
+
+# --- Limite d'envoi -------------------------------------------------------
+# Alignée sur MAX_UPLOAD_MB (50 Mo). Le serveur web rejette la requête avant
+# FastAPI, sans consommer de mémoire applicative.
+LimitRequestBody 52428800
+
+
+# --- Sources non servies directement --------------------------------------
+# Passenger impose que la racine du site soit la racine du code. Sans ces
+# règles, le serveur web sert les fichiers du dépôt en statique — donc SANS
+# passer par l'authentification de l'application : n'importe qui peut lire
+# app/config.py, wsgi_entry.py, requirements.txt, les PDF de tests, etc.
+#
+# Avec ces règles, ces URL retombent sur l'application, qui répond 404.
+# `.well-known/` reste accessible : le renouvellement du certificat en dépend.
+
+Options -Indexes
+
+<FilesMatch "\.(py|pyc|pyo|md|txt|json|lock|ya?ml|toml|cfg|ini|j2|sh|pdf|bak|log|sample)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^(Dockerfile|Procfile|LICENSE)$">
+  Require all denied
+</FilesMatch>
+
+# Fichiers cachés (.git, .env, .gitignore…). Les serveurs O2Switch bloquent
+# déjà .git et .env, mais on ne s'en remet pas à une configuration externe.
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
