@@ -8,6 +8,15 @@
 #     cat deploy/o2switch.htaccess >> ~/pdf2moodle/.htaccess
 #
 # Puis vérifiez : les sources doivent répondre 404, l'application 200.
+#
+# cPanel réécrit ce fichier à chaque modification de l'application (changement
+# de variables d'environnement, de version de Python, redémarrage depuis
+# l'interface). Les règles ajoutées ici y ont survécu lors des essais, mais
+# elles peuvent être déplacées dans le fichier : revérifiez après coup.
+#
+# C'est aussi dans ce fichier que cPanel écrit les variables d'environnement,
+# donc TOOL_PASSWORD EN CLAIR. Le refus des fichiers cachés, plus bas, n'est
+# pas décoratif.
 
 
 # --- Limite d'envoi -------------------------------------------------------

@@ -343,3 +343,25 @@ Deux limites à connaître :
   directement par le serveur web **ne passent pas par elle** — d'où le
   `deploy/o2switch.htaccess`, sans lequel tout le dépôt reste lisible malgré un
   mot de passe correctement configuré.
+
+Sur O2Switch, cPanel matérialise les variables d'environnement en écrivant dans
+le `.htaccess` de l'application :
+
+```apache
+<IfModule Litespeed>
+SetEnv TOOL_USERNAME …
+SetEnv TOOL_PASSWORD …
+</IfModule>
+```
+
+Le mot de passe s'y trouve donc **en clair**, dans un fichier situé à la racine
+du site. Les serveurs cPanel refusent déjà `.htaccess` en HTTP, et
+`deploy/o2switch.htaccess` le refuse une seconde fois (`<FilesMatch "^\.">`).
+À vérifier après tout changement de configuration, cPanel réécrivant ce fichier
+à chaque modification de l'application :
+
+```bash
+curl -o /dev/null -w '%{http_code}\n' https://<domaine>/.htaccess   # 403
+```
+
+Sur Railway, les variables ne transitent pas par un fichier du site.
