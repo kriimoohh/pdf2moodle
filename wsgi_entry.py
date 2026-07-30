@@ -1,4 +1,4 @@
-"""Point d'entrée Passenger (cPanel « Setup Python App », O2Switch).
+"""Point d'entrée WSGI pour Passenger (cPanel « Setup Python App », O2Switch).
 
 Passenger parle WSGI, FastAPI parle ASGI. On interpose `a2wsgi.ASGIMiddleware`,
 qui exécute l'application ASGI dans une boucle d'événements dédiée au sein du
@@ -8,7 +8,14 @@ Cette approche est préférée au lancement d'uvicorn en sous-processus : pas de
 port à réserver, pas de second processus à surveiller, et Passenger conserve la
 maîtrise du cycle de vie (arrêt, rechargement, montée en charge).
 
-Passenger recherche une variable nommée `application` dans ce fichier.
+CE FICHIER NE DOIT PAS S'APPELER `passenger_wsgi.py`.
+cPanel génère lui-même un `passenger_wsgi.py` dont le seul rôle est de charger
+le « fichier de démarrage » déclaré pour l'application, puis d'en exporter
+`application`. Déclarer `passenger_wsgi.py` comme fichier de démarrage le fait
+donc se charger lui-même : `RecursionError` au démarrage et erreur 500. Le
+fichier de démarrage doit porter un autre nom — celui-ci.
+
+Il doit exposer une variable nommée `application`.
 """
 
 import os

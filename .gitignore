@@ -12,6 +12,11 @@ htmlcov/
 *.html
 !app/templates/*.html
 
+# Générés par cPanel sur le serveur (chargeur Passenger, config, cache)
+passenger_wsgi.py
+.htaccess
+tmp/
+
 .env
 .DS_Store
 .idea/

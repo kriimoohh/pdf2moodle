@@ -102,10 +102,15 @@ Sonde de disponibilité, volontairement accessible sans authentification.
 
 2. **Application Python.** cPanel → *Setup Python App* → *Create Application* :
    - Version de Python : **3.12** (ou la plus récente proposée)
-   - *Application root* : `apps/pdf2moodle`
+   - *Application root* : `pdf2moodle`
    - *Application URL* : le sous-domaine créé
-   - *Application startup file* : `passenger_wsgi.py`
+   - *Application startup file* : **`wsgi_entry.py`**
    - *Application Entry point* : `application`
+
+   > **Ne déclarez pas `passenger_wsgi.py` comme fichier de démarrage.** cPanel
+   > génère ce fichier lui-même, avec pour seul rôle de charger le fichier de
+   > démarrage déclaré. Le désigner revient à le faire se charger lui-même :
+   > `RecursionError` et erreur 500 au démarrage. D'où le nom `wsgi_entry.py`.
 
    Notez la commande `source .../bin/activate` affichée par cPanel : elle
    contient le chemin de l'environnement virtuel créé pour vous.
@@ -195,7 +200,7 @@ pdf2moodle/
 │   ├── test_acceptance.py        critères d'acceptation
 │   ├── test_browser.py           comportement réel dans Chromium
 │   └── test_auth.py              protection par mot de passe
-├── passenger_wsgi.py             point d'entrée Passenger (O2Switch)
+├── wsgi_entry.py                 point d'entrée Passenger (O2Switch)
 ├── Dockerfile / railway.json / Procfile
 └── requirements.txt
 ```
