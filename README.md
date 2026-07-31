@@ -11,6 +11,48 @@ sommaire latéral, un zoom, un mode plein écran et un suivi de lecture.
 jamais écrits sur disque : tout le traitement se fait en mémoire et le résultat
 est renvoyé directement dans la réponse HTTP.
 
+```mermaid
+flowchart LR
+    A[PDF de cours] --> B[Formulaire web]
+    B --> C{{POST /api/convert}}
+    C --> D[PyMuPDF<br/>page → JPEG]
+    C --> E[Extraction<br/>des titres]
+    D --> F[Document HTML<br/>autonome]
+    E --> F
+    F --> G[Téléchargement]
+    G --> H[Ressource Fichier<br/>sur Moodle]
+```
+
+---
+
+## Utilisation
+
+1. Ouvrez l'outil et déposez le PDF (glisser-déposer ou clic).
+2. Renseignez ce que vous voulez voir en en-tête — badge, titre, sous-titre,
+   auteur. Tout est facultatif ; à défaut, le titre reprend le nom du fichier.
+3. Choisissez la qualité :
+   - **Basse** pour un support déjà très lisible, ou si Moodle limite la taille ;
+   - **Moyenne** dans la plupart des cas ;
+   - **Haute** quand les pages contiennent du texte fin, des formules ou des
+     schémas denses. Comptez environ trois fois le poids de la qualité basse.
+4. L'aperçu s'affiche dans la page ; téléchargez le HTML.
+5. Déposez-le sur Moodle en ressource **Fichier** (et non « Page » : le contenu
+   est un fichier complet, pas du HTML à coller dans l'éditeur).
+
+Deux points à surveiller côté Moodle :
+
+- **La taille maximale d'envoi.** Un cours de 30 pages en qualité haute pèse
+  environ 3 Mo, ce qui passe partout ; un support long et dense peut approcher
+  la limite fixée par votre établissement. Si le dépôt échoue, reconvertissez en
+  qualité moyenne ou basse.
+- **Le mode d'affichage de la ressource.** Dans les réglages d'apparence du
+  fichier, choisissez un mode qui *ouvre* le document plutôt que d'en forcer le
+  téléchargement, sinon vos étudiants récupèrent un fichier au lieu de le lire
+  en ligne. L'intitulé exact du réglage varie selon la version de Moodle.
+
+Le fichier produit est autonome : une fois téléchargé, il s'ouvre sans connexion
+et reste lisible même si l'outil n'est plus en ligne.
+
 ---
 
 ## Démarrage rapide
@@ -252,6 +294,7 @@ pdf2moodle/
 │   └── o2switch.htaccess         règles à ajouter au .htaccess (obligatoire)
 ├── wsgi_entry.py                 point d'entrée Passenger (O2Switch)
 ├── Dockerfile / railway.json / Procfile
+├── CHANGELOG.md                  historique, dont les pièges de déploiement
 └── requirements.txt
 ```
 
@@ -365,3 +408,38 @@ curl -o /dev/null -w '%{http_code}\n' https://<domaine>/.htaccess   # 403
 ```
 
 Sur Railway, les variables ne transitent pas par un fichier du site.
+
+---
+
+## Maintenance
+
+**Tenir `pymupdf` à jour.** C'est la mesure de sécurité qui compte le plus dans
+la durée : ce composant analyse des PDF que l'outil n'a pas produits, et c'est
+donc la principale surface d'attaque. MuPDF a un historique de correctifs
+mémoire ; le reste du code ne manipule que des chaînes déjà validées.
+
+```bash
+# O2Switch
+source ~/virtualenv/pdf2moodle/3.12/bin/activate
+pip install -U pymupdf && pip freeze | grep -i pymupdf   # reporter dans requirements.txt
+cloudlinux-selector restart --interpreter python --app-root pdf2moodle
+```
+
+Sur Railway, il suffit de mettre à jour la version épinglée dans
+`requirements.txt` et de pousser.
+
+Après toute mise à jour, relancez la suite de tests : elle vérifie l'extraction
+des titres, la conversion et le rendu réel du document, ce qui suffit à détecter
+une régression de PyMuPDF.
+
+**Mettre à jour le code déployé :**
+
+```bash
+cd ~/pdf2moodle && git pull
+cloudlinux-selector restart --interpreter python --app-root pdf2moodle
+```
+
+Le `.htaccess` et le `passenger_wsgi.py` généré ne sont pas suivis par git : un
+`git pull` les préserve. Vérifiez tout de même après coup que les règles de
+`deploy/o2switch.htaccess` sont toujours en place — cPanel réécrit ce fichier
+lors des changements de configuration de l'application.
